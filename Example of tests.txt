@@ -1,0 +1,75 @@
+- Task:
+a) Статус код 200
+b) Проверка структуры json в ответе.
+c) В ответе указаны коэффициенты умножения salary, напишите тесты по проверке правильности результата перемножения на коэффициент.
+d) проверить, что 2-й элемент массива salary больше 1-го и 0-го
+
+
+- Сonditions:
+http://116.203.27.46:5002/new_data
+req.:
+POST
+age: int
+salary: int
+name: str
+auth_token
+
+Resp:
+{'name':name,
+  'age': int(age),
+  'salary': [salary, str(salary*2), str(salary*3)]}
+
+
+- Decision:
+
+a) // Проверить статус код 200:
+pm.test("Status code is 200", function () {
+    pm.response.to.have.status(200);
+});
+
+
+b) // Проверка структуры json в ответе:
+var jsonData = pm.response.json();
+var schema = {
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "age": {
+      "type": "integer"
+    },
+    "name": {
+      "type": "string"
+    },
+    "salary": {
+      "type": "array",
+      "items": [
+        {
+          "type": "integer"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "string"
+        }
+      ]
+    }
+  }
+}
+pm.test('schema is valid', function(){
+    pm.expect(tv4.validate(jsonData, schema)).to.be.true
+});
+
+
+c) // В ответе указаны коэффициенты умножения salary, тесты по проверке правильности результата перемножения на коэффициент:
+pm.test("salary factor_new_data", function () {
+    var jsonData = pm.response.json() ;
+    pm.expect(parseInt(jsonData.salary[1])).to.eql(jsonData.salary[0]*2);
+    pm.expect(parseInt(jsonData.salary[2])).to.eql(jsonData.salary[0]*3);
+    });
+
+d) // Проверить, что 2-й элемент массива salary больше 1-го и 0-го:
+pm.test('salary_check_more_1_0', function() {
+    var jsonData = pm.response.json();
+    pm.expect(parseInt(jsonData.salary[2])).to.be.above(parseInt(jsonData.salary[1]), jsonData.salary[0]);
+});
